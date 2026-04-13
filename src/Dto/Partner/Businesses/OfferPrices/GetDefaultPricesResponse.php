@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @generated Yandex Market OpenAPI DTO
+ */
+
+namespace PhpSoftBox\YandexMarket\Dto\Partner\Businesses\OfferPrices;
+
+use PhpSoftBox\YandexMarket\Dto\YandexMarketDtoInterface;
+use PhpSoftBox\YandexMarket\Dto\YandexMarketDtoValue;
+
+final readonly class GetDefaultPricesResponse implements YandexMarketDtoInterface
+{
+    /**
+     * @param array<string, mixed> $extra
+     */
+    public function __construct(
+        public ?OfferDefaultPriceListResponseDTO $result,
+        public array $extra = [],
+    ) {
+    }
+
+    public static function fromArray(array $payload): static
+    {
+        return new self(
+            result: YandexMarketDtoValue::object($payload['result'] ?? null, OfferDefaultPriceListResponseDTO::class),
+            extra: YandexMarketDtoValue::extra($payload, ['result']),
+        );
+    }
+}
