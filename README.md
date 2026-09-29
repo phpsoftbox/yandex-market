@@ -53,8 +53,15 @@ rate-limit ответа. Сетевые ошибки, timeout и остальн�
   станет доступен.
 
 Если сервер передал несколько ограничений, выбирается наибольшая задержка. Для
-`X-RateLimit-Resource-Until` она может быть длительной. Если синхронному процессу
-нельзя столько ждать, установите `maxAttempts: 1` или исключите запрос через policy.
+`X-RateLimit-Resource-Until` она может быть длительной, поэтому по умолчанию действуют
+два бюджета:
+
+- одна задержка — не более 30 секунд (`maxDelaySeconds`);
+- сумма задержек одного вызова клиента — не более 60 секунд (`maxTotalDelaySeconds`).
+
+Задержка не обрезается до лимита: более ранний повтор противоречил бы заголовку. Вместо
+ожидания клиент выбрасывает `YandexMarketException` со статусом последнего ответа (420/429)
+и его payload. `null` в параметре отключает соответствующее ограничение.
 
 Тело каждого повтора создаётся заново из сохранённого JSON, поэтому запрос полностью
 воспроизводится даже после чтения предыдущего body stream.
@@ -73,6 +80,8 @@ $client = new YandexMarketApiClient(
     streamFactory: $streamFactory,
     rateLimitRetry: new RateLimitRetryOptions(
         maxAttempts: 4,
+        maxDelaySeconds: 30.0,
+        maxTotalDelaySeconds: 60.0,
         onRetry: static function (YandexMarketRetryEvent $event): void {
             // Доступны attempt, delaySeconds, method, endpoint и statusCode.
         },
@@ -103,6 +112,9 @@ $orders = $client->v2('campaigns/123')->get('/orders')->makeDto();
 ```
 
 ## Генерация DTO
+
+Генератор — инструмент сопровождения пакета: ему нужны `phpsoftbox/cli-app`, `phpsoftbox/code-generator`, `symfony/yaml`
+(в `suggest`, в `require` не входят). Клиенту API эти зависимости не нужны.
 Генератор ожидает локальный OpenAPI YAML/JSON файл. По умолчанию используется `docs/openapi.yaml`:
 
 ```bash
